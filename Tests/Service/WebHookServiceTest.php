@@ -19,6 +19,8 @@ use Plugin\Api\Entity\WebHook;
 use Plugin\Api\Service\WebHookService;
 use ReflectionClass;
 use ReflectionException;
+use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class WebHookServiceTest extends EccubeTestCase
 {
@@ -77,5 +79,31 @@ class WebHookServiceTest extends EccubeTestCase
         $method->setAccessible(true);
 
         return $method->invokeArgs($this->service, [$payload, $WebHook]);
+    }
+
+    public function testFire_masterRequest()
+    {
+        $webHookService = new WebHookService(null, null, null);
+        $filterResponseEvent = new FilterResponseEvent(null, null, HttpKernelInterface::MASTER_REQUEST, null);
+
+        try {
+            $webHookService->fire($filterResponseEvent);
+            self::fail();
+        } catch (\Exception $exception) {
+            self::assertTrue(true);
+        }
+    }
+
+    public function testFire_subRequest()
+    {
+        $webHookService = new WebHookService(null, null, null);
+        $filterResponseEvent = new FilterResponseEvent(null, null, HttpKernelInterface::SUB_REQUEST, null);
+
+        try {
+            $webHookService->fire($filterResponseEvent);
+            self::assertTrue(true);
+        } catch (\Exception $exception) {
+            self::fail();
+        }
     }
 }
